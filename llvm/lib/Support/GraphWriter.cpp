@@ -165,6 +165,18 @@ bool llvm::DisplayGraph(StringRef FilenameRef, bool wait,
       return false;
   }
 #endif
+  const char *userSuppliedViewerProgram = getenv("LLVM_GRAPHVIZ_VIEWER");
+  if (userSuppliedViewerProgram != nullptr) {
+      if (S.TryFindProgram(userSuppliedViewerProgram, ViewerPath)) {
+          std::vector<StringRef> args;
+          args.push_back(ViewerPath);
+          args.push_back(Filename);
+          errs() << "Trying '" << userSuppliedViewerProgram << "' program... ";
+          if (!ExecGraphViewer(ViewerPath, args, Filename, wait, ErrMsg))
+              return false;
+      }
+  }
+
   if (S.TryFindProgram("xdg-open", ViewerPath)) {
     std::vector<StringRef> args;
     args.push_back(ViewerPath);

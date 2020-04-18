@@ -412,6 +412,8 @@ option(LLVM_ENABLE_PEDANTIC "Compile with pedantic enabled." ON)
 option(LLVM_ENABLE_WERROR "Fail and stop if a warning is triggered." OFF)
 
 option(LLVM_ENABLE_DUMP "Enable dump functions even when assertions are disabled" OFF)
+option(LLVM_ENABLE_GRAPHVIZ_EXPORT "Enable graphviz/dot output on non-debug builds" OFF)
+
 
 if( NOT uppercase_CMAKE_BUILD_TYPE STREQUAL "DEBUG" )
   option(LLVM_ENABLE_ASSERTIONS "Enable assertions" OFF)

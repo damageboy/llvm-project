@@ -147,6 +147,50 @@ public:
   }
 
   void writeFooter() {
+
+
+      //      node [shape=plaintext]
+      //      subgraph cluster_01 {
+      //              label = "Legend";
+      //              { rank=same; key, key2 }
+      //              // Labels always go top-down
+      //              key [label=<<table border="0" cellpadding="2" cellspacing="0" cellborder="0">
+      //              <tr><td align="right" port="i1">Black</td></tr>
+      //              <tr><td align="right" port="i2">BlueDashed</td></tr>
+      //              <tr><td align="right" port="i3">RedBold</td></tr>
+      //              </table>>]
+      //              key2 [label=<<table border="0" cellpadding="2" cellspacing="0" cellborder="0">
+      //              <tr><td port="i1">&nbsp;</td></tr>
+      //              <tr><td port="i2">&nbsp;</td></tr>
+      //              <tr><td port="i3">&nbsp;</td></tr>
+      //              </table>>]
+      //
+      //              key:i1:e -> key2:i1:w [color=red, style=bold]
+      //              key:i2:e -> key2:i2:w [color=blue, style=dashed]
+      //              key:i3:e -> key2:i3:w [color=black]
+      //      }
+
+      if (DTraits.renderGraphFromBottomUp()) {
+          O << "node [shape=plaintext]\n";
+          O << "subgraph cluster_01 {\n";
+          O << "        label = \"Legend\";\n";
+          O << "        { rank=same; key, key2 }\n";
+          O << "        key [label=<<table border=\"0\" cellpadding=\"2\" cellspacing=\"0\" cellborder=\"0\">\n";
+          O << "        <tr><td align=\"right\" port=\"i1\">Data Dependency</td></tr>\n";
+          O << "        <tr><td align=\"right\" port=\"i2\">Chain</td></tr>\n";
+          O << "        <tr><td align=\"right\" port=\"i3\">Glue</td></tr>\n";
+          O << "        </table>>]\n";
+          O << "        key2 [label=<<table border=\"0\" cellpadding=\"2\" cellspacing=\"0\" cellborder=\"0\">\n";
+          O << "        <tr><td port=\"i1\">&nbsp;</td></tr>\n";
+          O << "        <tr><td port=\"i2\">&nbsp;</td></tr>\n";
+          O << "        <tr><td port=\"i3\">&nbsp;</td></tr>\n";
+          O << "        </table>>]\n";
+          O << "        key:i1:e -> key2:i1:w [color=red, style=bold]\n";
+          O << "        key:i2:e -> key2:i2:w [color=blue, style=dashed]\n";
+          O << "        key:i3:e -> key2:i3:w\n";
+          O << "}\n";
+
+      }
     // Finish off the graph
     O << "}\n";
   }
@@ -332,7 +376,9 @@ std::string WriteGraph(const GraphType &G, const Twine &Name,
   int FD;
   // Windows can't always handle long paths, so limit the length of the name.
   std::string N = Name.str();
+#if defined(_WIN32)
   N = N.substr(0, std::min<std::size_t>(N.size(), 140));
+#endif
   if (Filename.empty()) {
     Filename = createGraphFilename(N, FD);
   } else {

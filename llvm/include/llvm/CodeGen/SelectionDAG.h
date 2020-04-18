@@ -433,10 +433,10 @@ public:
   BlockFrequencyInfo *getBFI() const { return BFI; }
 
   /// Pop up a GraphViz/gv window with the DAG rendered using 'dot'.
-  void viewGraph(const std::string &Title);
+  void viewGraph(const std::string &Title, const std::string &Suffix);
   void viewGraph();
 
-#ifndef NDEBUG
+#if defined(LLVM_ENABLE_GRAPHVIZ_EXPORT) || !defined(NDEBUG)
   std::map<const SDNode *, std::string> NodeGraphAttrs;
 #endif
 

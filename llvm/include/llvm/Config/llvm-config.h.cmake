@@ -17,6 +17,10 @@
 /* Define if LLVM_ENABLE_DUMP is enabled */
 #cmakedefine LLVM_ENABLE_DUMP
 
+/* Define if LLVM_ENABLE_GRAPHVIZ_EXPORT is enabled */
+#cmakedefine LLVM_ENABLE_GRAPHVIZ_EXPORT
+
+
 /* Target triple LLVM will generate code for by default */
 #cmakedefine LLVM_DEFAULT_TARGET_TRIPLE "${LLVM_DEFAULT_TARGET_TRIPLE}"
 

@@ -138,7 +138,7 @@ UseMBPI("use-mbpi",
         cl::desc("use Machine Branch Probability Info"),
         cl::init(true), cl::Hidden);
 
-#ifndef NDEBUG
+#if defined(LLVM_ENABLE_GRAPHVIZ_EXPORT) || !defined(NDEBUG)
 static cl::opt<std::string>
 FilterDAGBasicBlockName("filter-view-dags", cl::Hidden,
                         cl::desc("Only display the basic block whose name "
@@ -786,12 +786,10 @@ void SelectionDAGISel::CodeGenAndEmitDAG() {
   // Pre-type legalization allow creation of any node types.
   CurDAG->NewNodesMustHaveLegalTypes = false;
 
-#ifndef NDEBUG
+#if defined(LLVM_ENABLE_GRAPHVIZ_EXPORT) || !defined(NDEBUG)
   MatchFilterBB = (FilterDAGBasicBlockName.empty() ||
                    FilterDAGBasicBlockName ==
                        FuncInfo->MBB->getBasicBlock()->getName());
-#endif
-#ifdef NDEBUG
   if (ViewDAGCombine1 || ViewLegalizeTypesDAGs || ViewDAGCombineLT ||
       ViewLegalizeDAGs || ViewDAGCombine2 || ViewISelDAGs || ViewSchedDAGs ||
       ViewSUnitDAGs)
@@ -806,7 +804,7 @@ void SelectionDAGISel::CodeGenAndEmitDAG() {
              CurDAG->dump());
 
   if (ViewDAGCombine1 && MatchFilterBB)
-    CurDAG->viewGraph("dag-combine1 input for " + BlockName);
+    CurDAG->viewGraph("dag-combine1 input for " + BlockName, "dag-combine1");
 
   // Run the DAG combiner in pre-legalize mode.
   {
@@ -828,7 +826,7 @@ void SelectionDAGISel::CodeGenAndEmitDAG() {
   // Second step, hack on the DAG until it only uses operations and types that
   // the target supports.
   if (ViewLegalizeTypesDAGs && MatchFilterBB)
-    CurDAG->viewGraph("legalize-types input for " + BlockName);
+    CurDAG->viewGraph("legalize-types input for " + BlockName, "legalize-types");
 
   bool Changed;
   {
@@ -852,7 +850,7 @@ void SelectionDAGISel::CodeGenAndEmitDAG() {
 
   if (Changed) {
     if (ViewDAGCombineLT && MatchFilterBB)
-      CurDAG->viewGraph("dag-combine-lt input for " + BlockName);
+      CurDAG->viewGraph("dag-combine-lt input for " + BlockName, "dag-combine-lt");
 
     // Run the DAG combiner in post-type-legalize mode.
     {
@@ -896,7 +894,7 @@ void SelectionDAGISel::CodeGenAndEmitDAG() {
                CurDAG->dump());
 
     if (ViewDAGCombineLT && MatchFilterBB)
-      CurDAG->viewGraph("dag-combine-lv input for " + BlockName);
+      CurDAG->viewGraph("dag-combine-lv input for " + BlockName, "dag-combine-lv");
 
     // Run the DAG combiner in post-type-legalize mode.
     {
@@ -917,7 +915,7 @@ void SelectionDAGISel::CodeGenAndEmitDAG() {
   }
 
   if (ViewLegalizeDAGs && MatchFilterBB)
-    CurDAG->viewGraph("legalize input for " + BlockName);
+    CurDAG->viewGraph("legalize input for " + BlockName, "legalize");
 
   {
     NamedRegionTimer T("legalize", "DAG Legalization", GroupName,
@@ -936,7 +934,7 @@ void SelectionDAGISel::CodeGenAndEmitDAG() {
              CurDAG->dump());
 
   if (ViewDAGCombine2 && MatchFilterBB)
-    CurDAG->viewGraph("dag-combine2 input for " + BlockName);
+    CurDAG->viewGraph("dag-combine2 input for " + BlockName, "dag-combine2");
 
   // Run the DAG combiner in post-legalize mode.
   {
@@ -959,7 +957,7 @@ void SelectionDAGISel::CodeGenAndEmitDAG() {
     ComputeLiveOutVRegInfo();
 
   if (ViewISelDAGs && MatchFilterBB)
-    CurDAG->viewGraph("isel input for " + BlockName);
+    CurDAG->viewGraph("isel input for " + BlockName, "isel");
 
   // Third, instruction select all of the operations to machine code, adding the
   // code to the MachineBasicBlock.
@@ -975,7 +973,7 @@ void SelectionDAGISel::CodeGenAndEmitDAG() {
              CurDAG->dump());
 
   if (ViewSchedDAGs && MatchFilterBB)
-    CurDAG->viewGraph("scheduler input for " + BlockName);
+    CurDAG->viewGraph("scheduler input for " + BlockName, "scheduler");
 
   // Schedule machine code.
   ScheduleDAGSDNodes *Scheduler = CreateScheduler();
@@ -986,7 +984,7 @@ void SelectionDAGISel::CodeGenAndEmitDAG() {
   }
 
   if (ViewSUnitDAGs && MatchFilterBB)
-    Scheduler->viewGraph();
+    Scheduler->viewGraph( "Scheduling-Units Graph for " + BlockName, "sunit");
 
   // Emit machine code to BB.  This can change 'BB' to the last block being
   // inserted into.

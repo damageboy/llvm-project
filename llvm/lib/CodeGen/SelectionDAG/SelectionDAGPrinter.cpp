@@ -81,7 +81,7 @@ namespace llvm {
                                               const SelectionDAG *Graph) {
       std::string R;
       raw_string_ostream OS(R);
-#ifndef NDEBUG
+#if defined(LLVM_ENABLE_GRAPHVIZ_EXPORT) || !defined(NDEBUG)
       OS << 't' << Node->PersistentId;
 #else
       OS << static_cast<const void *>(Node);
@@ -116,7 +116,7 @@ namespace llvm {
     std::string getNodeLabel(const SDNode *Node, const SelectionDAG *Graph);
     static std::string getNodeAttributes(const SDNode *N,
                                          const SelectionDAG *Graph) {
-#ifndef NDEBUG
+#if defined(LLVM_ENABLE_GRAPHVIZ_EXPORT) || !defined(NDEBUG)
       const std::string &Attrs = Graph->getGraphAttrs(N);
       if (!Attrs.empty()) {
         if (Attrs.find("shape=") == std::string::npos)
@@ -147,27 +147,27 @@ std::string DOTGraphTraits<SelectionDAG*>::getNodeLabel(const SDNode *Node,
 /// viewGraph - Pop up a ghostview window with the reachable parts of the DAG
 /// rendered using 'dot'.
 ///
-void SelectionDAG::viewGraph(const std::string &Title) {
+void SelectionDAG::viewGraph(const std::string &Title, const std::string &Suffix) {
 // This code is only for debugging!
-#ifndef NDEBUG
-  ViewGraph(this, "dag." + getMachineFunction().getName(),
+#if defined(LLVM_ENABLE_GRAPHVIZ_EXPORT) || !defined(NDEBUG)
+  ViewGraph(this, "dag." + getMachineFunction().getName() + "." +Suffix,
             false, Title);
 #else
   errs() << "SelectionDAG::viewGraph is only available in debug builds on "
          << "systems with Graphviz or gv!\n";
-#endif  // NDEBUG
+#endif  // defined(LLVM_ENABLE_GRAPHVIZ_EXPORT) || !defined(NDEBUG)
 }
 
 // This overload is defined out-of-line here instead of just using a
 // default parameter because this is easiest for gdb to call.
 void SelectionDAG::viewGraph() {
-  viewGraph("");
+  viewGraph("", "");
 }
 
 /// clearGraphAttrs - Clear all previously defined node graph attributes.
 /// Intended to be used from a debugging tool (eg. gdb).
 void SelectionDAG::clearGraphAttrs() {
-#ifndef NDEBUG
+#if defined(LLVM_ENABLE_GRAPHVIZ_EXPORT) || !defined(NDEBUG)
   NodeGraphAttrs.clear();
 #else
   errs() << "SelectionDAG::clearGraphAttrs is only available in debug builds"
@@ -179,7 +179,7 @@ void SelectionDAG::clearGraphAttrs() {
 /// setGraphAttrs - Set graph attributes for a node. (eg. "color=red".)
 ///
 void SelectionDAG::setGraphAttrs(const SDNode *N, const char *Attrs) {
-#ifndef NDEBUG
+#if defined(LLVM_ENABLE_GRAPHVIZ_EXPORT) || !defined(NDEBUG)
   NodeGraphAttrs[N] = Attrs;
 #else
   errs() << "SelectionDAG::setGraphAttrs is only available in debug builds"
@@ -191,7 +191,7 @@ void SelectionDAG::setGraphAttrs(const SDNode *N, const char *Attrs) {
 /// getGraphAttrs - Get graph attributes for a node. (eg. "color=red".)
 /// Used from getNodeAttributes.
 const std::string SelectionDAG::getGraphAttrs(const SDNode *N) const {
-#ifndef NDEBUG
+#if defined(LLVM_ENABLE_GRAPHVIZ_EXPORT) || !defined(NDEBUG)
   std::map<const SDNode *, std::string>::const_iterator I =
     NodeGraphAttrs.find(N);
 
@@ -209,7 +209,7 @@ const std::string SelectionDAG::getGraphAttrs(const SDNode *N) const {
 /// setGraphColor - Convenience for setting node color attribute.
 ///
 void SelectionDAG::setGraphColor(const SDNode *N, const char *Color) {
-#ifndef NDEBUG
+#if defined(LLVM_ENABLE_GRAPHVIZ_EXPORT) || !defined(NDEBUG)
   NodeGraphAttrs[N] = std::string("color=") + Color;
 #else
   errs() << "SelectionDAG::setGraphColor is only available in debug builds"
@@ -224,7 +224,7 @@ bool SelectionDAG::setSubgraphColorHelper(SDNode *N, const char *Color, DenseSet
                                           int level, bool &printed) {
   bool hit_limit = false;
 
-#ifndef NDEBUG
+#if defined(LLVM_ENABLE_GRAPHVIZ_EXPORT) || !defined(NDEBUG)
   if (level >= 20) {
     if (!printed) {
       printed = true;
@@ -253,7 +253,7 @@ bool SelectionDAG::setSubgraphColorHelper(SDNode *N, const char *Color, DenseSet
 /// setSubgraphColor - Convenience for setting subgraph color attribute.
 ///
 void SelectionDAG::setSubgraphColor(SDNode *N, const char *Color) {
-#ifndef NDEBUG
+#if defined(LLVM_ENABLE_GRAPHVIZ_EXPORT) || !defined(NDEBUG)
   DenseSet<SDNode *> visited;
   bool printed = false;
   if (setSubgraphColorHelper(N, Color, visited, 0, printed)) {
