@@ -37260,6 +37260,16 @@ bool X86TargetLowering::SimplifyDemandedBitsForTargetNode(
       Known.Zero.setLowBits(NumElts);
     return false;
   }
+  case X86ISD::PDEP: {
+      SDValue Src = Op.getOperand(0);
+      MVT SrcVT = Src.getSimpleValueType();
+      unsigned SrcBits = SrcVT.getScalarSizeInBits();
+
+      KnownBits KnownSrc;
+      if (SimplifyDemandedBits(Src, OriginalDemandedBits, KnownSrc, TLO, Depth + 1))
+          return true;
+      return false;
+  }
   case X86ISD::BEXTR: {
     SDValue Op0 = Op.getOperand(0);
     SDValue Op1 = Op.getOperand(1);
@@ -45408,6 +45418,25 @@ static SDValue combineMOVMSK(SDNode *N, SelectionDAG &DAG,
   return SDValue();
 }
 
+static SDValue combinePDEP(SDNode *N, SelectionDAG &DAG,
+                           TargetLowering::DAGCombinerInfo &DCI,
+                           const X86Subtarget &Subtarget) {
+    SDValue Op1 = N->getOperand(1);
+
+    if (auto* Cst1 = dyn_cast<ConstantSDNode>(Op1)) {
+        unsigned popCount = Cst1->getAPIntValue().countPopulation();
+
+        if (popCount <= 32) {
+            // Simplify the inputs.
+            const TargetLowering &TLI = DAG.getTargetLoweringInfo();
+            APInt DemandedMask(APInt::getLowBitsSet(64, popCount));
+            if (TLI.SimplifyDemandedBits(SDValue(N, 0), DemandedMask, DCI))
+                return SDValue(N, 0);
+        }
+    }
+    return SDValue();
+}
+
 static SDValue combineX86GatherScatter(SDNode *N, SelectionDAG &DAG,
                                        TargetLowering::DAGCombinerInfo &DCI) {
   // With vector masks we only demand the upper bit of the mask.
@@ -47631,6 +47660,7 @@ SDValue X86TargetLowering::PerformDAGCombine(SDNode *N,
   case X86ISD::FMADDSUB:
   case X86ISD::FMSUBADD:    return combineFMADDSUB(N, DAG, DCI);
   case X86ISD::MOVMSK:      return combineMOVMSK(N, DAG, DCI, Subtarget);
+  case X86ISD::PDEP:        return combinePDEP(N, DAG, DCI, Subtarget);
   case X86ISD::MGATHER:
   case X86ISD::MSCATTER:    return combineX86GatherScatter(N, DAG, DCI);
   case ISD::MGATHER:
